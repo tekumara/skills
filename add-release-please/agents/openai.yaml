@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add Release Please"
+  short_description: "Install release-please into a repo"
+  default_prompt: "Use $add-release-please to add release-please automation to this repository."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mermaid Export"
+  short_description: "Extract Mermaid from Markdown and render PNG or SVG outputs."
+  default_prompt: "Use this skill when you need to extract a Mermaid diagram from a Markdown document and render it to PNG or SVG reliably."

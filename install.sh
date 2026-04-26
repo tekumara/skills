@@ -9,4 +9,4 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # install symlinks
 stow -vv skills -t ~/.codex/skills
 stow -vv skills -t ~/.pi/agent/skills
-ln -sfn "$SCRIPT_DIR/prompts" ~/.pi/agent/prompts
+stow -vv prompts -t ~/.pi/agent/prompts

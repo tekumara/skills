@@ -13,6 +13,7 @@ Inspect the repository before changing anything. Reuse existing release or publi
    - Read `.github/workflows/*`.
    - Read the dominant package metadata such as `package.json`, `pyproject.toml`, `Cargo.toml`, or equivalent.
    - Check whether tags, GitHub Releases, or package publishing already exist.
+   - Check both local tags and remote tags on `origin` before deciding the repository is untagged.
    - Check `git status --short` and avoid overwriting unrelated local edits.
 
 2. Choose the release-please shape.
@@ -28,12 +29,17 @@ Inspect the repository before changing anything. Reuse existing release or publi
    - Use the release type that matches the repository ecosystem. If the correct release type is unclear, verify it against the official `release-please` docs before editing.
    - Seed the manifest version from the current package version when present; otherwise use the repo's current unreleased baseline.
 
-4. Integrate with the existing publish flow.
+4. Bootstrap the initial release tag when needed.
+   - If there are no existing local tags and no remote tags on `origin`, create an annotated `v0.0.0` tag on the repository's first commit.
+   - Push that bootstrap tag to `origin` so `release-please` has a baseline release point.
+   - Do not add the bootstrap tag if the repository already has any tag history, existing GitHub Releases, or an established non-`v` tagging convention that should be preserved.
+
+5. Integrate with the existing publish flow.
    - Keep publish workflows that already run on `release.published`.
    - If publishing currently depends on tags or manual version bumps, adapt it to consume GitHub Releases created by `release-please`.
    - Do not duplicate version ownership. After installation, `release-please` should own changelog and version bumps.
 
-5. Update contributor documentation.
+6. Update contributor documentation.
    - Add a `Release flow` section to `CONTRIBUTING.md`.
    - If `CONTRIBUTING.md` does not exist, create it.
    - Explain the operational flow only: conventional commits, the release PR, the merge creating the tag and GitHub Release, and any downstream publish workflow.
@@ -50,11 +56,11 @@ Inspect the repository before changing anything. Reuse existing release or publi
 
    - Do not add secret values or GitHub App setup steps to `CONTRIBUTING.md` unless the user explicitly asks for that documentation.
 
-6. Hand off the remaining manual setup.
+7. Hand off the remaining manual setup.
    - In the final response, tell the user which repository secrets to add: `APP_ID` and `APP_PRIVATE_KEY`.
    - Tell the user which GitHub App permissions or repo settings still need manual configuration when relevant: install the app on the repo, grant `Contents`, `Pull requests`, and `Issues` write access, and enable GitHub Actions pull request creation if the repo blocks workflow-created PRs.
 
-7. Validate.
+8. Validate.
    - Validate YAML and JSON syntax locally.
    - Validate any Markdown edits for clarity and placement.
    - Summarize any remaining manual setup, especially secrets and repo settings, in the final handoff.
@@ -95,7 +101,7 @@ jobs:
         uses: actions/create-github-app-token@v3
         with:
           # https://github.com/apps/potatobot-prime
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - uses: googleapis/release-please-action@v4
         with:

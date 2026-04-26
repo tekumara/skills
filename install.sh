@@ -5,4 +5,5 @@
 set -euo pipefail
 
 # install symlinks
-stow -vv --ignore="install.sh|README.md" . -t ~/.codex/skills
+stow -vv skills -t ~/.codex/skills
+stow -vv skills -t ~/.pi/agent/skills

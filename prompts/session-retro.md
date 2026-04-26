@@ -1,3 +1,6 @@
+---
+description: Analyze the previous session for wrong turns and repo improvements
+---
 Analyze the previous session.
 Find places the agent went
 in a wrong direction, only to

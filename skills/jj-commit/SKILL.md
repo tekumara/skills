@@ -24,6 +24,7 @@ Use this short flow unless something looks unusual:
 3. For push flows, inspect bookmarks on the commit to push with `jj bookmark list -r @- -T 'name ++ "\n"'` when the working copy is empty.
 4. Open full `jj diff` only when the scope is unclear, the diff is surprisingly large, or you need help writing the message.
 5. Skip `jj help commit` / `jj help git push` unless you need uncommon flags or a command fails.
+6. Before committing, run the rationale gate in Message tips; fast path reduces inspection, not commit-message quality.
 
 This avoids spending time on a full patch review for small, already-understood changes.
 
@@ -127,12 +128,25 @@ Use push-only commands instead of any commit+push helper for a plain `jj push` r
 - If the recent work makes the message obvious, choose it and proceed.
 - Ask the user only when the intent is genuinely ambiguous.
 
+### Rationale gate
+
+Before every commit, decide whether a future reader can infer **why** from the subject and diff alone.
+
+Add a commit body when any condition is true:
+
+- The change fixes misleading behavior, flaky tests, timeouts, performance, reliability, data loss, or evaluation/metric artifacts.
+- The diff is mechanically small but the cause/effect chain is non-obvious.
+- The change chooses a tradeoff, workaround, limit, timeout, concurrency setting, dependency override, migration path, or compatibility constraint.
+- The user supplied rationale or asked “why” during the task.
+
+Subject-only commits are acceptable only for self-explanatory changes such as typo fixes, pure renames, generated lockfile updates, or trivial config bumps.
+
 ### Body Guidelines
 
-- Explain what and why, not how
-- Use imperative mood and present tense
-- Include motivation for the change
-- Contrast with previous behavior when relevant
+- Include motivation and rationale for the change.
+- State previous behavior and new behavior when relevant.
+- Explain the causal chain for non-obvious fixes, not just the files changed.
+- Use imperative mood and present tense.
 
 ## Notes
 

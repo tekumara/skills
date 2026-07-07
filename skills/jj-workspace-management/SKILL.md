@@ -78,10 +78,10 @@ Run the script from the main colocated JJ workspace that has `.git`, not from a 
 
 Script contract:
 - Arguments: a GitHub PR URL or number, and a workspace path that must not already exist.
-- Output: JSON with the PR head, remote name, tracked bookmark, new workspace path, new workspace head and parent, push hint, and original workspace verification.
-- Behavior: fetches the PR branch with `jj git fetch`, runs `jj bookmark track`, creates a JJ workspace at the tracked PR bookmark, and verifies the original workspace did not move.
+- Output: JSON with the PR head, predictable remote name `pr-<number>-<owner>`, tracked bookmark, new workspace path, new workspace head and parent, push hint, and original workspace verification.
+- Behavior: fetches the PR branch with `jj git fetch`, runs `jj bookmark track`, creates a JJ workspace at the fetched remote PR bookmark, and verifies the original workspace did not move.
 - Push after edits: move the tracked bookmark to the finished change, then push it. The script prints the exact `jj bookmark set ...` and `jj git push ...` commands in `push_hint`.
-- Fallback: if the script is unavailable or fails before creating a workspace, fetch the PR branch without checking it out, run `jj bookmark track --remote <remote> <branch>`, then run `jj workspace add <path> -r <tracked-pr-bookmark>`. If it fails after creating a workspace, inspect `jj workspace list` and either continue from the created workspace or forget and delete it.
+- Fallback: if the script is unavailable or fails before creating a workspace, fetch the PR branch without checking it out, run `jj bookmark track --remote <remote> <branch>`, then run `jj workspace add <path> -r <branch>@<remote>`. If it fails after creating a workspace, inspect `jj workspace list` and either continue from the created workspace or forget and delete it.
 
 ### 6) Fresh workspaces may need bootstrap
 A new workspace directory may not have repo-local install artifacts. Before running tests, check whether bootstrap is needed.

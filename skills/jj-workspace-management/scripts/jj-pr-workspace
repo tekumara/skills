@@ -46,41 +46,38 @@ def normalize_git_url(url: str) -> str:
     return value.rstrip("/").lower()
 
 
-def git_remotes(cwd: Path) -> dict[str, str]:
+def jj_git_remotes(cwd: Path) -> dict[str, str]:
     remotes: dict[str, str] = {}
-    proc = run(["git", "remote"], cwd=cwd)
-    for name in proc.stdout.splitlines():
-        if not name:
+    proc = run(["jj", "git", "remote", "list"], cwd=cwd)
+    for line in proc.stdout.splitlines():
+        if not line:
             continue
-        url_proc = run(["git", "remote", "get-url", name], cwd=cwd, check=False)
-        if url_proc.returncode == 0:
-            remotes[name] = url_proc.stdout.strip()
+        name, _, url = line.partition(" ")
+        if name and url:
+            remotes[name] = url.strip()
     return remotes
 
 
 def safe_remote_name(name: str) -> str:
-    remote = re.sub(r"[^A-Za-z0-9._-]+", "-", name).strip("-._")
+    remote = re.sub(r"[^A-Za-z0-9._-]+", "-", name).strip("-._").lower()
     return remote or "pr-remote"
 
 
-def ensure_pr_remote(cwd: Path, head_repo_url: str, owner_login: str, pr_number: int) -> tuple[str, bool]:
-    wanted = normalize_git_url(head_repo_url)
-    remotes = git_remotes(cwd)
-    for name, url in remotes.items():
-        if normalize_git_url(url) == wanted:
-            return name, False
+def pr_remote_name(owner_login: str, pr_number: int) -> str:
+    return f"pr-{pr_number}-{safe_remote_name(owner_login)}"
 
-    base = safe_remote_name(owner_login)
-    candidates = [base, f"pr-{pr_number}-{base}"]
-    candidates.extend(f"pr-{pr_number}-{base}-{i}" for i in range(2, 100))
-    for candidate in candidates:
-        existing = remotes.get(candidate)
-        if existing is None:
-            run(["jj", "git", "remote", "add", candidate, head_repo_url], cwd=cwd)
-            return candidate, True
-        if normalize_git_url(existing) == wanted:
-            return candidate, False
-    raise RuntimeError("could not choose a safe remote name")
+
+def ensure_pr_remote(cwd: Path, remote_name: str, head_repo_url: str) -> bool:
+    remotes = jj_git_remotes(cwd)
+    existing_url = remotes.get(remote_name)
+    if existing_url is None:
+        run(["jj", "git", "remote", "add", remote_name, head_repo_url], cwd=cwd)
+        return True
+    if normalize_git_url(existing_url) != normalize_git_url(head_repo_url):
+        raise RuntimeError(
+            f"remote {remote_name} already exists with URL {existing_url}, expected {head_repo_url}"
+        )
+    return False
 
 
 def parse_args() -> argparse.Namespace:
@@ -89,31 +86,16 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("pr", help="GitHub PR URL or number accepted by `gh pr view`.")
     parser.add_argument("workspace_path", help="Path for the new JJ workspace. It must not already exist.")
-    parser.add_argument(
-        "--keep-going-if-ref-mismatch",
-        action="store_true",
-        help="Create the workspace even if the fetched remote bookmark does not match the PR head OID.",
-    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    for tool in ("gh", "git", "jj"):
+    for tool in ("gh", "jj"):
         require_tool(tool)
 
     start_cwd = Path.cwd()
     jj_root = Path(run(["jj", "root"], cwd=start_cwd).stdout.strip())
-
-    git_top_proc = run(["git", "rev-parse", "--show-toplevel"], cwd=jj_root, check=False)
-    if git_top_proc.returncode != 0:
-        raise RuntimeError(
-            "this script must be run from a colocated JJ workspace that has a Git checkout. "
-            "Run it from the main workspace, not from a secondary JJ workspace without .git."
-        )
-    git_top = Path(git_top_proc.stdout.strip())
-    if git_top != jj_root:
-        raise RuntimeError(f"Git root {git_top} does not match JJ root {jj_root}")
 
     workspace_path = Path(args.workspace_path).expanduser()
     if not workspace_path.is_absolute():
@@ -143,9 +125,10 @@ def main() -> int:
     head_repo = pr_info["headRepository"]["nameWithOwner"]
     owner_login = pr_info["headRepositoryOwner"]["login"]
     head_repo_url = f"https://github.com/{head_repo}.git"
+    remote_name = pr_remote_name(owner_login, number)
 
-    print(f"Ensuring a JJ/Git remote for {head_repo_url}", file=sys.stderr)
-    remote_name, remote_added = ensure_pr_remote(jj_root, head_repo_url, owner_login, number)
+    print(f"Ensuring JJ/Git remote {remote_name} for {head_repo_url}", file=sys.stderr)
+    remote_added = ensure_pr_remote(jj_root, remote_name, head_repo_url)
 
     print(f"Fetching PR #{number} from {remote_name}:{head_ref_name}", file=sys.stderr)
     run(["jj", "git", "fetch", "--remote", remote_name, "--branch", head_ref_name], cwd=jj_root)
@@ -153,11 +136,7 @@ def main() -> int:
     remote_rev = f"{head_ref_name}@{remote_name}"
     fetched_oid = jj_template(remote_rev, 'commit_id ++ "\\n"', jj_root)
     if fetched_oid != head_ref_oid:
-        message = f"fetched remote bookmark {remote_rev} is {fetched_oid}, but GitHub reported PR head {head_ref_oid}"
-        if args.keep_going_if_ref_mismatch:
-            print(f"WARNING: {message}", file=sys.stderr)
-        else:
-            raise RuntimeError(message)
+        raise RuntimeError(f"fetched remote bookmark {remote_rev} is {fetched_oid}, but GitHub reported PR head {head_ref_oid}")
 
     print(f"Tracking PR branch with `jj bookmark track --remote {remote_name} {head_ref_name}`", file=sys.stderr)
     track_proc = run(["jj", "bookmark", "track", "--remote", remote_name, head_ref_name], cwd=jj_root)
@@ -166,15 +145,8 @@ def main() -> int:
     if track_proc.stderr:
         print(track_proc.stderr, file=sys.stderr, end="")
 
-    tracked_commit = jj_template(head_ref_name, 'commit_id ++ "\\n"', jj_root)
-    if tracked_commit != fetched_oid:
-        raise RuntimeError(
-            f"tracked bookmark {head_ref_name} is {tracked_commit}, expected PR head {fetched_oid}. "
-            "A local bookmark with the PR branch name may already exist at a different commit."
-        )
-
     print(f"Creating JJ workspace at {workspace_path}", file=sys.stderr)
-    run(["jj", "workspace", "add", str(workspace_path), "-r", head_ref_name], cwd=jj_root)
+    run(["jj", "workspace", "add", str(workspace_path), "-r", remote_rev], cwd=jj_root)
 
     after_commit = jj_template("@", 'commit_id ++ "\\n"', jj_root)
     after_change = jj_template("@", 'change_id ++ "\\n"', jj_root)

@@ -97,6 +97,7 @@ Acceptance gates:
 - the script is non-interactive
 - the script prints structured JSON on success
 - the script fetches and tracks the PR branch before creating the workspace
+- the script uses a predictable remote name in the form `pr-<number>-<owner>`
 - the original workspace commit is unchanged after a successful script run
 - cleanup of test workspaces is verified with `jj workspace list`
 

@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""Create a JJ workspace for a GitHub pull request without checking out Git HEAD."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+
+class CommandError(RuntimeError):
+    def __init__(self, command: list[str], returncode: int, stdout: str, stderr: str) -> None:
+        self.command = command
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+        super().__init__(f"command failed with exit {returncode}: {' '.join(command)}")
+
+
+def run(command: list[str], *, cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
+    proc = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
+    if check and proc.returncode != 0:
+        raise CommandError(command, proc.returncode, proc.stdout, proc.stderr)
+    return proc
+
+
+def require_tool(name: str) -> None:
+    if not shutil.which(name):
+        raise RuntimeError(f"required tool not found on PATH: {name}")
+
+
+def jj_template(rev: str, template: str, cwd: Path) -> str:
+    return run(["jj", "log", "-r", rev, "--no-graph", "-T", template], cwd=cwd).stdout.strip()
+
+
+def normalize_git_url(url: str) -> str:
+    value = url.strip()
+    value = re.sub(r"^git@github\.com:", "https://github.com/", value)
+    value = re.sub(r"^ssh://git@github\.com/", "https://github.com/", value)
+    value = value.removesuffix(".git")
+    return value.rstrip("/").lower()
+
+
+def git_remotes(cwd: Path) -> dict[str, str]:
+    remotes: dict[str, str] = {}
+    proc = run(["git", "remote"], cwd=cwd)
+    for name in proc.stdout.splitlines():
+        if not name:
+            continue
+        url_proc = run(["git", "remote", "get-url", name], cwd=cwd, check=False)
+        if url_proc.returncode == 0:
+            remotes[name] = url_proc.stdout.strip()
+    return remotes
+
+
+def safe_remote_name(name: str) -> str:
+    remote = re.sub(r"[^A-Za-z0-9._-]+", "-", name).strip("-._")
+    return remote or "pr-remote"
+
+
+def ensure_pr_remote(cwd: Path, head_repo_url: str, owner_login: str, pr_number: int) -> tuple[str, bool]:
+    wanted = normalize_git_url(head_repo_url)
+    remotes = git_remotes(cwd)
+    for name, url in remotes.items():
+        if normalize_git_url(url) == wanted:
+            return name, False
+
+    base = safe_remote_name(owner_login)
+    candidates = [base, f"pr-{pr_number}-{base}"]
+    candidates.extend(f"pr-{pr_number}-{base}-{i}" for i in range(2, 100))
+    for candidate in candidates:
+        existing = remotes.get(candidate)
+        if existing is None:
+            run(["jj", "git", "remote", "add", candidate, head_repo_url], cwd=cwd)
+            return candidate, True
+        if normalize_git_url(existing) == wanted:
+            return candidate, False
+    raise RuntimeError("could not choose a safe remote name")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Create a new JJ workspace at a GitHub PR head without running `gh pr checkout`.",
+    )
+    parser.add_argument("pr", help="GitHub PR URL or number accepted by `gh pr view`.")
+    parser.add_argument("workspace_path", help="Path for the new JJ workspace. It must not already exist.")
+    parser.add_argument(
+        "--keep-going-if-ref-mismatch",
+        action="store_true",
+        help="Create the workspace even if the fetched remote bookmark does not match the PR head OID.",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    for tool in ("gh", "git", "jj"):
+        require_tool(tool)
+
+    start_cwd = Path.cwd()
+    jj_root = Path(run(["jj", "root"], cwd=start_cwd).stdout.strip())
+
+    git_top_proc = run(["git", "rev-parse", "--show-toplevel"], cwd=jj_root, check=False)
+    if git_top_proc.returncode != 0:
+        raise RuntimeError(
+            "this script must be run from a colocated JJ workspace that has a Git checkout. "
+            "Run it from the main workspace, not from a secondary JJ workspace without .git."
+        )
+    git_top = Path(git_top_proc.stdout.strip())
+    if git_top != jj_root:
+        raise RuntimeError(f"Git root {git_top} does not match JJ root {jj_root}")
+
+    workspace_path = Path(args.workspace_path).expanduser()
+    if not workspace_path.is_absolute():
+        workspace_path = (start_cwd / workspace_path).resolve()
+    if workspace_path.exists():
+        raise RuntimeError(f"workspace path already exists: {workspace_path}")
+
+    before_commit = jj_template("@", 'commit_id ++ "\\n"', jj_root)
+    before_change = jj_template("@", 'change_id ++ "\\n"', jj_root)
+    before_workspace = jj_template("@", 'working_copies ++ "\\n"', jj_root)
+
+    pr_json = run(
+        [
+            "gh",
+            "pr",
+            "view",
+            args.pr,
+            "--json",
+            "number,headRefName,headRefOid,headRepository,headRepositoryOwner,url",
+        ],
+        cwd=jj_root,
+    ).stdout
+    pr_info: dict[str, Any] = json.loads(pr_json)
+    number = pr_info["number"]
+    head_ref_name = pr_info["headRefName"]
+    head_ref_oid = pr_info["headRefOid"]
+    head_repo = pr_info["headRepository"]["nameWithOwner"]
+    owner_login = pr_info["headRepositoryOwner"]["login"]
+    head_repo_url = f"https://github.com/{head_repo}.git"
+
+    print(f"Ensuring a JJ/Git remote for {head_repo_url}", file=sys.stderr)
+    remote_name, remote_added = ensure_pr_remote(jj_root, head_repo_url, owner_login, number)
+
+    print(f"Fetching PR #{number} from {remote_name}:{head_ref_name}", file=sys.stderr)
+    run(["jj", "git", "fetch", "--remote", remote_name, "--branch", head_ref_name], cwd=jj_root)
+
+    remote_rev = f"{head_ref_name}@{remote_name}"
+    fetched_oid = jj_template(remote_rev, 'commit_id ++ "\\n"', jj_root)
+    if fetched_oid != head_ref_oid:
+        message = f"fetched remote bookmark {remote_rev} is {fetched_oid}, but GitHub reported PR head {head_ref_oid}"
+        if args.keep_going_if_ref_mismatch:
+            print(f"WARNING: {message}", file=sys.stderr)
+        else:
+            raise RuntimeError(message)
+
+    print(f"Tracking PR branch with `jj bookmark track --remote {remote_name} {head_ref_name}`", file=sys.stderr)
+    track_proc = run(["jj", "bookmark", "track", "--remote", remote_name, head_ref_name], cwd=jj_root)
+    if track_proc.stdout:
+        print(track_proc.stdout, file=sys.stderr, end="")
+    if track_proc.stderr:
+        print(track_proc.stderr, file=sys.stderr, end="")
+
+    tracked_commit = jj_template(head_ref_name, 'commit_id ++ "\\n"', jj_root)
+    if tracked_commit != fetched_oid:
+        raise RuntimeError(
+            f"tracked bookmark {head_ref_name} is {tracked_commit}, expected PR head {fetched_oid}. "
+            "A local bookmark with the PR branch name may already exist at a different commit."
+        )
+
+    print(f"Creating JJ workspace at {workspace_path}", file=sys.stderr)
+    run(["jj", "workspace", "add", str(workspace_path), "-r", head_ref_name], cwd=jj_root)
+
+    after_commit = jj_template("@", 'commit_id ++ "\\n"', jj_root)
+    after_change = jj_template("@", 'change_id ++ "\\n"', jj_root)
+    if after_commit != before_commit or after_change != before_change:
+        raise RuntimeError(
+            "current JJ workspace changed while creating the PR workspace. "
+            f"Before {before_commit} {before_change}; after {after_commit} {after_change}."
+        )
+
+    workspace_status = run(["jj", "status"], cwd=workspace_path).stdout
+    workspace_head = jj_template("@", 'commit_id ++ " " ++ change_id ++ "\\n"', workspace_path)
+    workspace_parent = jj_template("@-", 'commit_id ++ " " ++ change_id ++ "\\n"', workspace_path)
+
+    print(
+        json.dumps(
+            {
+                "pr": pr_info["url"],
+                "pr_number": number,
+                "head_repo": head_repo,
+                "head_ref": head_ref_name,
+                "head_oid": head_ref_oid,
+                "remote": remote_name,
+                "remote_added": remote_added,
+                "remote_bookmark": remote_rev,
+                "tracked_bookmark": head_ref_name,
+                "workspace_path": str(workspace_path),
+                "workspace_head": workspace_head,
+                "workspace_parent": workspace_parent,
+                "original_workspace": before_workspace,
+                "original_commit": before_commit,
+                "original_change": before_change,
+                "original_workspace_unchanged": True,
+                "workspace_status": workspace_status,
+                "push_hint": f"After committing, run `jj bookmark set {head_ref_name} -r @` then `jj git push --remote {remote_name} --bookmark {head_ref_name}`.",
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except CommandError as exc:
+        print(str(exc), file=sys.stderr)
+        if exc.stdout:
+            print("stdout:", file=sys.stderr)
+            print(exc.stdout, file=sys.stderr)
+        if exc.stderr:
+            print("stderr:", file=sys.stderr)
+            print(exc.stderr, file=sys.stderr)
+        raise SystemExit(exc.returncode)
+    except Exception as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(1)

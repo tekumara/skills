@@ -1,11 +1,11 @@
 ---
 name: jj-workspace-management
-description: Manages Jujutsu workspaces for isolated task execution, rebases, conflict resolution, and cleanup. Use when the user asks to create or switch workspaces, isolate dirty working copies, rebase onto main or another revision, resolve jj workspace conflicts, or clean up temporary workspaces.
+description: Manages Jujutsu workspaces for isolated task execution, GitHub PR checkout, rebases, conflict resolution, and cleanup. Use when the user asks to create or switch workspaces, check out a GitHub pull request in a JJ workspace, isolate dirty working copies, rebase onto main or another revision, resolve jj workspace conflicts, or clean up temporary workspaces.
 ---
 
 # JJ Workspace Management
 
-Use this skill for tasks involving `jj workspace add`, `jj new`, `jj rebase`, `jj workspace forget`, and temporary-workspace cleanup.
+Use this skill for tasks involving `jj workspace add`, `jj new`, `jj rebase`, `jj workspace forget`, GitHub PR workspace checkout, and temporary-workspace cleanup.
 
 ## Quick checklist
 
@@ -65,7 +65,25 @@ If `jj rebase` produces conflicts:
 
 Never forget/remove a workspace that still contains the easiest path to conflict resolution.
 
-### 5) Fresh workspaces may need bootstrap
+### 5) Do not use `gh pr checkout` in the shared JJ checkout
+In a colocated JJ repository, `jj workspace add` creates a JJ workspace, not a separate Git worktree. A new JJ workspace may not have a `.git` directory. Running `gh pr checkout` in the shared Git checkout can move Git `HEAD`, and then `jj status` can import that movement into the current JJ workspace.
+
+When the user asks to check out a GitHub PR in a new JJ workspace, use `scripts/jj-pr-workspace` from this skill when possible.
+
+```bash
+scripts/jj-pr-workspace <pr-url-or-number> <new-workspace-path>
+```
+
+Run the script from the main colocated JJ workspace that has `.git`, not from a secondary JJ workspace without `.git`.
+
+Script contract:
+- Arguments: a GitHub PR URL or number, and a workspace path that must not already exist.
+- Output: JSON with the PR head, remote name, tracked bookmark, new workspace path, new workspace head and parent, push hint, and original workspace verification.
+- Behavior: fetches the PR branch with `jj git fetch`, runs `jj bookmark track`, creates a JJ workspace at the tracked PR bookmark, and verifies the original workspace did not move.
+- Push after edits: move the tracked bookmark to the finished change, then push it. The script prints the exact `jj bookmark set ...` and `jj git push ...` commands in `push_hint`.
+- Fallback: if the script is unavailable or fails before creating a workspace, fetch the PR branch without checking it out, run `jj bookmark track --remote <remote> <branch>`, then run `jj workspace add <path> -r <tracked-pr-bookmark>`. If it fails after creating a workspace, inspect `jj workspace list` and either continue from the created workspace or forget and delete it.
+
+### 6) Fresh workspaces may need bootstrap
 A new workspace directory may not have repo-local install artifacts. Before running tests, check whether bootstrap is needed.
 
 Examples:
@@ -83,6 +101,14 @@ Use the repo’s normal bootstrap command.
 3. do the task there
 4. validate
 5. remove temp workspace only after success
+
+### Check out a GitHub PR into a new JJ workspace
+1. inspect current state and record the current `@` full commit id
+2. run `scripts/jj-pr-workspace <pr-url-or-number> <new-workspace-path>` from the main colocated JJ workspace
+3. read the JSON output and verify `original_workspace_unchanged` is `true`
+4. keep the `push_hint` for when the user asks to push back to the PR branch
+5. `cd` into the new workspace
+6. bootstrap if needed, then test or edit there
 
 ### Rebase a completed task onto main
 1. resolve what `main` means

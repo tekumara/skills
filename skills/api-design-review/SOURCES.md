@@ -4,7 +4,8 @@
 
 | Source | Trust | Contribution | Constraints |
 |---|---|---|---|
-| User request in this session | Primary | Required checks: endpoint scope overlap, response payload consistency, deprecated-route exclusion | Private session; store only generalized requirements |
+| User request in this session | Primary | Required checks: endpoint overlap, response consistency, deprecated-route exclusion, difference tables, functional scope, and full REST rubric | Private session; store only generalized requirements |
+| [How to (and how not to) design REST APIs](https://github.com/stickfigure/blog/wiki/How-to-%28and-how-not-to%29-design-REST-APIs) | Secondary, opinionated | Rules 0–12 covering pragmatism, resources, URLs, payloads, IDs, not-found behavior, consistency, errors, idempotency, and timestamps | Adapted into a compact rubric; fetched 2026-07-28; retain attribution and flag Rule 8 as non-universal |
 | Agent Skills format and local `skill-writer` guidance | Primary | Skill structure, trigger description, inline shape, specification, validation | None |
 
 ## Decisions
@@ -17,7 +18,18 @@
 - **Adopted:** explicit deprecation evidence; age and newer alternatives are insufficient.
 - **Adopted:** every overlap group gets a compact difference table covering endpoint, functional scope, filters/sorting, and pagination.
 - **Adopted:** auth is not part of functional scope; add an optional auth column only when requirements differ within the group.
-- **Deferred:** review of errors, naming, authentication, and performance until requested.
+- **Adopted:** all upstream Rules 0–12 as an every-run review rubric, transformed from narrative into checks and statuses.
+- **Adapted:** Rule 8 retains the warning about ambiguous `404` responses but must be presented as opinionated when established HTTP or project conventions differ.
+- **Deferred:** performance and implementation-quality review unrelated to the API contract.
+
+## Source adaptation
+
+- **Source intent:** promote pragmatic, evolvable REST APIs that are predictable for clients.
+- **Local target:** turn every numbered rule into an evidence-backed review check without replacing the existing overlap analysis.
+- **Fidelity boundary:** preserve Rules 0–12 and their important exceptions, especially simple metadata maps, compound paths, mutation applicability, and UTC timestamps.
+- **Local replacements:** narrative examples became concise checks and a fixed status table.
+- **Omitted material:** anecdotes, vendor criticism, and extended distributed-systems explanation do not change review decisions.
+- **Rights and attribution:** no license was identified on the fetched wiki page; retain the source link and paraphrase rather than reproducing substantial prose.
 
 ## Coverage
 
@@ -29,18 +41,24 @@
 | Success payload consistency | Covered |
 | Deprecation handling | Covered |
 | Missing-evidence behavior | Covered |
+| REST rules 0–12 | Covered |
+| Applicability and opinionated-rule handling | Covered |
 | Output contract | Covered |
 | Provider portability | Covered; no provider-specific mechanics |
 
 ## Retrieval stopping rationale
 
-The user supplied narrow review dimensions, the target repository provides a representative test case, and the portable Agent Skills requirements are known. Further API-design research would broaden the skill beyond the requested checks.
+The requested upstream article was fetched in full and every numbered rule was mapped into the runtime rubric. Additional REST guidance would introduce criteria outside the requested source rather than improve source coverage.
 
 ## Iteration evidence
 
 - Human-verified fix: when functionality overlaps, compare the affected endpoints in a table rather than describing differences only in prose.
 - Human-verified correction: `Scope` means functional scope, not authentication or authorization scope.
 - Skill delta: require `Endpoint`, `Functional scope`, `Filters and sorting`, and `Pagination`; append `Auth` only when auth differs.
+- Human-verified expansion: add all rules from the fetched REST design article.
+- Skill delta: broadened the review and require a `Pass`, `Issue`, `N/A`, or `Unverified` result for Rules 0–12.
+- Subagent weakness found: mutation findings could escape a user-specified read-endpoint review boundary.
+- Skill delta: require an explicit boundary; supporting code may provide evidence but cannot expand the endpoints under review.
 
 ## Validation history
 

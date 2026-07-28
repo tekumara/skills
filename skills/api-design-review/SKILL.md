@@ -32,7 +32,8 @@ Review the implemented API contract, not route names alone.
    - `hasMore` or link semantics
    - field naming and nullability when response models differ
 7. Evaluate every item in the REST design rubric below against the inventoried review boundary. Mark non-applicable rules rather than silently skipping them.
-8. Verify each finding against implementation evidence. Do not report a difference as an inconsistency when it follows from a materially different operation and does not burden the same consumers.
+8. Assign a priority to every rubric issue and detailed finding using the priority policy below. Do not tag passes, non-applicable rules, or unverified observations.
+9. Verify each finding against implementation evidence. Do not report a difference as an inconsistency when it follows from a materially different operation and does not burden the same consumers.
 
 ## REST Design Rubric
 
@@ -51,6 +52,17 @@ Review the implemented API contract, not route names alone.
 | 10. Structured errors | Use one machine-readable error format across endpoints; preserve nested causes or stable error types when clients need them. |
 | 11. Idempotent mutations | Give retried non-idempotent operations an idempotency key, client-selected ID, or equivalent mechanism. Verify conflict or replay behavior. Mark read-only operations and naturally idempotent mutations `N/A`. |
 | 12. ISO 8601 time values | Encode timestamps and other date/time values as ISO 8601 strings; timestamps use UTC with `Z`. Verify serialization rather than trusting platform defaults. |
+
+## Priority Policy
+
+| Priority | Meaning | Assignment rules |
+|---|---|---|
+| `[P0]` | Drop everything to fix; blocking release or operations. | Use only for a verified release or operational blocker. |
+| `[P1]` | Urgent; address in the next cycle. | Use for changes to endpoint scope or success responses, authorization issues, and issues against rule 0 (pragmatism) or rule 2 (minimal paths). |
+| `[P2]` | Normal; fix eventually. | Use for OpenAPI omissions or documentation inaccuracies, idempotency problems, distinguishable not-found issues, and structured-error issues. |
+| `[P3]` | Low; nice to have. | Use for remaining verified issues with limited consumer or operational impact. |
+
+When categories overlap, assign the highest priority that reflects the verified impact. An OpenAPI omission about authorization remains `[P2]` when runtime authorization is correct; use `[P1]` when the implemented authorization or endpoint access boundary is wrong. Never assign `[P0]` without evidence of release or operational blockage.
 
 ## Review Rules
 
@@ -91,11 +103,11 @@ Report every rubric item, including passes and non-applicable rules:
 | Rule | Status | Evidence |
 |---|---|---|
 
-Use only `Pass`, `Issue`, `N/A`, or `Unverified` as status values. A rule may produce more than one detailed finding.
+Use `Pass`, `N/A`, or `Unverified` unchanged. Format issues as `[P0] Issue`, `[P1] Issue`, `[P2] Issue`, or `[P3] Issue`. A rule may produce more than one detailed finding.
 
 ### Findings
 
-Order findings by consumer impact. For each finding provide:
+Order findings by consumer impact. Prefix every finding heading with its priority, for example `### [P1] Incompatible pagination contracts`. For each finding provide:
 
 1. **Issue** — violated rule, overlap classification, or payload inconsistency.
 2. **Endpoints** — exact methods and paths.

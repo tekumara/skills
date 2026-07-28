@@ -32,8 +32,8 @@ Out of scope:
 ## Runtime Contract
 
 - Required first actions: select a revision and review boundary, discover routes within it, and verify contracts in implementation or generated specifications
-- Required outputs: endpoint inventory, a difference table for each overlapping endpoint group, an optional auth column when auth differs, a status row for every REST rubric rule, evidence-backed findings, minimal compatible recommendations, and excluded deprecated routes
-- Non-negotiable constraints: findings stay within the declared review boundary; supporting evidence may come from outside it; functional scope excludes auth; compare differing auth separately; do not infer deprecation; distinguish overlap from redundancy; distinguish compatibility issues from style guidance; label missing evidence
+- Required outputs: endpoint inventory, a difference table for each overlapping endpoint group, an optional auth column when auth differs, a status row for every REST rubric rule, priority-tagged issues and findings, evidence-backed findings, minimal compatible recommendations, and excluded deprecated routes
+- Non-negotiable constraints: findings stay within the declared review boundary; supporting evidence may come from outside it; functional scope excludes auth; compare differing auth separately; do not infer deprecation; distinguish overlap from redundancy; distinguish compatibility issues from style guidance; label missing evidence; assign priorities using the policy in `SKILL.md`
 - Expected bundled files loaded at runtime: `SKILL.md` only
 
 ## Source And Evidence Model
@@ -65,7 +65,7 @@ Data that must not be stored:
 
 - Lightweight validation: Agent Skill structural validator
 - Deeper validation: run in an isolated subagent against an API with known overlap and payload inconsistencies
-- Acceptance gates: identifies verified overlap, distinguishes overlap classes, compares each overlapping group by functional scope, filters/sorting, and pagination, adds auth only when it differs, evaluates every REST rubric rule as Pass/Issue/N/A/Unverified, detects incompatible pagination envelopes, and does not exclude unmarked routes as deprecated
+- Acceptance gates: identifies verified overlap, distinguishes overlap classes, compares each overlapping group by functional scope, filters/sorting, and pagination, adds auth only when it differs, evaluates every REST rubric rule, tags every issue and finding `[P0]` through `[P3]`, leaves passes/N/A/unverified observations untagged, detects incompatible pagination envelopes, and does not exclude unmarked routes as deprecated
 
 ## Known Limitations
 

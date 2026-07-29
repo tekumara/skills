@@ -32,8 +32,8 @@ Out of scope:
 ## Runtime Contract
 
 - Required first actions: select a revision and review boundary, discover routes within it, and verify contracts in implementation or generated specifications
-- Required outputs: one priority-tagged consolidated finding list covering every verified overlap and all other rubric and non-rubric issues; a comparison table inside each overlap finding; an optional auth column when auth differs; a REST rule coverage table that references findings without repeating them; evidence-backed recommendations; and excluded deprecated routes
-- Non-negotiable constraints: build the endpoint inventory as working evidence but do not include it in the final output; findings stay within the declared review boundary; supporting evidence may come from outside it; every duplicate, superset, or partial overlap is a finding; functional scope excludes auth; compare differing auth separately; do not infer deprecation; distinguish overlap from redundancy; distinguish compatibility issues from style guidance; label missing evidence; assign priorities using the policy in `SKILL.md`
+- Required outputs: one priority-tagged consolidated finding list covering every verified overlap and all other rubric and non-rubric issues; a comparison table inside each overlap finding; an optional auth column when auth differs; evidence-backed recommendations; and excluded deprecated routes
+- Non-negotiable constraints: build the endpoint inventory and full rubric evaluation as working evidence but do not include either as a final inventory or REST rule coverage table; findings stay within the declared review boundary; supporting evidence may come from outside it; every duplicate, superset, or partial overlap is a finding; functional scope excludes auth; compare differing auth separately; do not infer deprecation; distinguish overlap from redundancy; distinguish compatibility issues from style guidance; label missing evidence; assign priorities using the policy in `SKILL.md`; whenever a finding references a REST rule, include its number and exact rubric name
 - Expected bundled files loaded at runtime: `SKILL.md` only
 
 ## Source And Evidence Model
@@ -65,13 +65,13 @@ Data that must not be stored:
 
 - Lightweight validation: Agent Skill structural validator
 - Deeper validation: run in an isolated subagent against an API with known overlap and payload inconsistencies
-- Acceptance gates: builds but does not output an endpoint inventory; reports every verified duplicate, superset, or partial overlap as a finding; distinguishes overlap classes; compares each overlapping group inside its finding by functional scope, filters/sorting, and pagination; adds auth only when it differs; evaluates every REST rubric rule; reports every verified issue exactly once in a consolidated list; includes applicable REST rule numbers on each finding; tags every finding `[P0]` through `[P3]`; leaves passes/N/A/unverified observations untagged; makes issue rows in the coverage table reference findings instead of duplicating them; detects incompatible pagination envelopes; and does not exclude unmarked routes as deprecated
+- Acceptance gates: builds but does not output an endpoint inventory or REST rule coverage table; reports every verified duplicate, superset, or partial overlap as a finding; distinguishes overlap classes; compares each overlapping group inside its finding by functional scope, filters/sorting, and pagination; adds auth only when it differs; evaluates every REST rubric rule internally; reports every verified issue exactly once in a consolidated list; includes applicable REST rule numbers and exact names on each finding; tags every finding `[P0]` through `[P3]`; leaves passes/N/A/unverified observations out of the final output unless needed to qualify a finding; detects incompatible pagination envelopes; and does not exclude unmarked routes as deprecated
 
 ## Known Limitations
 
 - Route discovery depends on repository conventions and available specifications.
 - Semantic replacement safety may remain unverified without consumer evidence.
-- Rule 8's recommendation to avoid `404` for entity absence is opinionated and may conflict with established HTTP or project conventions; reviews must state that context.
+- Rule 8. Distinguishable not-found recommends avoiding `404` for entity absence; this is opinionated and may conflict with established HTTP or project conventions, so reviews must state that context.
 
 ## Maintenance Notes
 

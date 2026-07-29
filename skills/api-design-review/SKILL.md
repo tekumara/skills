@@ -31,7 +31,7 @@ Review the implemented API contract, not route names alone.
    - pagination metadata, token names, and token location
    - `hasMore` or link semantics
    - field naming and nullability when response models differ
-7. Evaluate every item in the REST design rubric below against the inventoried review boundary. Mark non-applicable rules rather than silently skipping them.
+7. Evaluate every item in the REST design rubric below against the inventoried review boundary as working evidence. Record passes, non-applicable rules, and unverified rules internally; do not output a final rule coverage table.
 8. Convert every verified issue into one consolidated, deduplicated finding list. Every duplicate, superset, or partial overlap must appear as a finding, even when it does not violate another rubric rule. Merge rules and observations that share one root cause; keep distinct consumer problems separate.
 9. Assign one priority to every consolidated finding using the priority policy below. Do not tag passes, non-applicable rules, or unverified observations.
 10. Verify each finding against implementation evidence. Do not report a difference as an inconsistency when it follows from a materially different operation and does not burden the same consumers.
@@ -59,7 +59,7 @@ Review the implemented API contract, not route names alone.
 | Priority | Meaning | Assignment rules |
 |---|---|---|
 | `[P0]` | Drop everything to fix; blocking release or operations. | Use only for a verified release or operational blocker. |
-| `[P1]` | Urgent; address in the next cycle. | Use for changes to endpoint scope or success responses, authorization issues, and issues against rule 0 (pragmatism) or rule 2 (minimal paths). |
+| `[P1]` | Urgent; address in the next cycle. | Use for changes to endpoint scope or success responses, authorization issues, and issues against rule 0. Be pragmatic or rule 2. Minimal paths. |
 | `[P2]` | Normal; fix eventually. | Use for OpenAPI omissions or documentation inaccuracies, idempotency problems, distinguishable not-found issues, and structured-error issues. |
 | `[P3]` | Low; nice to have. | Use for remaining verified issues with limited consumer or operational impact. |
 
@@ -77,7 +77,8 @@ When categories overlap, assign the highest priority that reflects the verified 
 - Separate compatibility findings from style guidance. Label a change as breaking when existing clients must change.
 - Recommend the smallest compatible correction; do not implement or redesign the API unless asked.
 - If evidence is missing, label the conclusion `unverified` rather than guessing.
-- Report each issue exactly once. In the REST rule coverage table, point issue rows to consolidated finding numbers instead of repeating issue details.
+- Report each issue exactly once.
+- Whenever referencing a REST rule, include both its number and exact rubric name, for example `0. Be pragmatic` or `9. Consistent models`. Never cite bare rule numbers.
 
 ## Output
 
@@ -105,7 +106,7 @@ Order one deduplicated list by priority, then consumer impact. Use this format:
 
 Concise description of the single root problem.
 
-**REST rules:** rule numbers and names, when applicable. Omit this field for findings outside the rubric.
+**REST rules:** rule numbers and exact rubric names, when applicable, for example `0. Be pragmatic; 9. Consistent models`. Never list bare rule numbers. Omit this field for findings outside the rubric.
 
 **Evidence:** implementation or specification locations and relevant behavior.
 
@@ -118,13 +119,4 @@ A finding may cite several REST rules. Do not create separate findings when the 
 
 If no issue survives verification, say so.
 
-### REST rule coverage
-
-Report every rubric item without restating issue details:
-
-| Rule | Status | Evidence or finding |
-|---|---|---|
-
-Use only `Pass`, `Issue`, `N/A`, or `Unverified` as status values. For `Issue`, link to the consolidated finding number or numbers. For other statuses, give concise evidence. Do not repeat priorities in this table; each priority belongs to its consolidated finding.
-
-End with a short list of deprecated endpoints excluded from the comparison, or `None`.
+Do not include a REST rule coverage table. End with a short list of deprecated endpoints excluded from the comparison, or `None`.

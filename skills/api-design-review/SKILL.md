@@ -32,7 +32,7 @@ Review the implemented API contract, not route names alone.
    - `hasMore` or link semantics
    - field naming and nullability when response models differ
 7. Evaluate every item in the REST design rubric below against the inventoried review boundary. Mark non-applicable rules rather than silently skipping them.
-8. Convert every verified issue—whether found through the rubric, overlap analysis, or another contract check—into one consolidated, deduplicated finding list. Merge rules and observations that share one root cause; keep distinct consumer problems separate.
+8. Convert every verified issue into one consolidated, deduplicated finding list. Every duplicate, superset, or partial overlap must appear as a finding, even when it does not violate another rubric rule. Merge rules and observations that share one root cause; keep distinct consumer problems separate.
 9. Assign one priority to every consolidated finding using the priority policy below. Do not tag passes, non-applicable rules, or unverified observations.
 10. Verify each finding against implementation evidence. Do not report a difference as an inconsistency when it follows from a materially different operation and does not burden the same consumers.
 
@@ -69,7 +69,8 @@ When categories overlap, assign the highest priority that reflects the verified 
 
 - Treat functional scope as the result-set boundary and capabilities across tenancy, ownership, target, filters, and sorting—not just the URL hierarchy.
 - Do not include authentication or authorization in functional scope or use an authorization difference to dismiss functional overlap. Compare authorization separately when it differs.
-- Distinguish overlap from redundancy. Overlap is a finding; removal requires evidence that one endpoint is a safe replacement.
+- Distinguish overlap from redundancy. Report every verified duplicate, superset, or partial overlap as a consolidated finding; removal requires evidence that one endpoint is a safe replacement.
+- Put the relevant endpoint comparison table inside the overlap finding, not in a separate overlap section.
 - Call out silent limits on unpaged collections because they affect whether a paged endpoint is truly equivalent.
 - Prefer one pagination contract for overlapping collection endpoints unless compatibility requirements justify otherwise.
 - Inspect supporting code outside the review boundary for evidence, but do not add unrelated endpoints or findings. For an endpoint subset with no mutations, mark idempotency `N/A`; for a full-API review, inspect all applicable mutations.
@@ -80,25 +81,20 @@ When categories overlap, assign the highest priority that reflects the verified 
 
 ## Output
 
-### Endpoint inventory
+Do not include the endpoint inventory in the final output. Build it as working evidence only.
 
-| Endpoint | Functional scope | Capabilities | Success payload | Status |
-|---|---|---|---|---|
+### Consolidated findings
 
-Append an `Auth` column only when authentication or authorization differs across inventoried endpoints.
+Start the final output with the review boundary, then the consolidated findings.
 
-### Overlap comparison
-
-For every duplicate, superset, or partial-overlap group, show how the endpoints differ before the detailed finding:
+For every duplicate, superset, or partial-overlap finding, include a comparison table inside that finding:
 
 | Endpoint | Functional scope | Filters and sorting | Pagination |
 |---|---|---|---|
 
 If authentication or authorization differs within the overlap group, append an `Auth` column. Omit it when requirements are the same or auth evidence is unavailable.
 
-Use exact methods and paths. Describe parameter location, page limit, and response envelope in the pagination column. Keep auth details out of `Functional scope`. Include only endpoints in that overlap group; reuse one table when a group supports multiple findings.
-
-### Consolidated findings
+Use exact methods and paths. Describe parameter location, page limit, and response envelope in the pagination column. Keep auth details out of `Functional scope`. Include only endpoints in that overlap group; reuse one table within a finding when it supports several observations.
 
 Order one deduplicated list by priority, then consumer impact. Use this format:
 
@@ -118,7 +114,7 @@ Concise description of the single root problem.
 **Recommendation:** smallest compatible change; preserve an existing endpoint when removal would be breaking.
 ```
 
-A finding may cite several REST rules. Do not create separate findings when the same contract problem violates several rules. Include overlap, authorization, OpenAPI, documentation, and other verified contract findings in this same list.
+A finding may cite several REST rules. Do not create separate findings when the same contract problem violates several rules. Include every verified overlap, plus authorization, OpenAPI, documentation, and other verified contract findings, in this same list.
 
 If no issue survives verification, say so.
 

@@ -32,8 +32,9 @@ Review the implemented API contract, not route names alone.
    - `hasMore` or link semantics
    - field naming and nullability when response models differ
 7. Evaluate every item in the REST design rubric below against the inventoried review boundary. Mark non-applicable rules rather than silently skipping them.
-8. Assign a priority to every rubric issue and detailed finding using the priority policy below. Do not tag passes, non-applicable rules, or unverified observations.
-9. Verify each finding against implementation evidence. Do not report a difference as an inconsistency when it follows from a materially different operation and does not burden the same consumers.
+8. Convert every verified issue—whether found through the rubric, overlap analysis, or another contract check—into one consolidated, deduplicated finding list. Merge rules and observations that share one root cause; keep distinct consumer problems separate.
+9. Assign one priority to every consolidated finding using the priority policy below. Do not tag passes, non-applicable rules, or unverified observations.
+10. Verify each finding against implementation evidence. Do not report a difference as an inconsistency when it follows from a materially different operation and does not burden the same consumers.
 
 ## REST Design Rubric
 
@@ -75,6 +76,7 @@ When categories overlap, assign the highest priority that reflects the verified 
 - Separate compatibility findings from style guidance. Label a change as breaking when existing clients must change.
 - Recommend the smallest compatible correction; do not implement or redesign the API unless asked.
 - If evidence is missing, label the conclusion `unverified` rather than guessing.
+- Report each issue exactly once. In the REST rule coverage table, point issue rows to consolidated finding numbers instead of repeating issue details.
 
 ## Output
 
@@ -96,23 +98,37 @@ If authentication or authorization differs within the overlap group, append an `
 
 Use exact methods and paths. Describe parameter location, page limit, and response envelope in the pagination column. Keep auth details out of `Functional scope`. Include only endpoints in that overlap group; reuse one table when a group supports multiple findings.
 
-### REST rule check
+### Consolidated findings
 
-Report every rubric item, including passes and non-applicable rules:
+Order one deduplicated list by priority, then consumer impact. Use this format:
 
-| Rule | Status | Evidence |
+```markdown
+### [P1] 1. Short finding title
+
+**Endpoints:** exact methods and paths, when applicable.
+
+Concise description of the single root problem.
+
+**REST rules:** rule numbers and names, when applicable. Omit this field for findings outside the rubric.
+
+**Evidence:** implementation or specification locations and relevant behavior.
+
+**Impact:** concrete client or maintenance cost.
+
+**Recommendation:** smallest compatible change; preserve an existing endpoint when removal would be breaking.
+```
+
+A finding may cite several REST rules. Do not create separate findings when the same contract problem violates several rules. Include overlap, authorization, OpenAPI, documentation, and other verified contract findings in this same list.
+
+If no issue survives verification, say so.
+
+### REST rule coverage
+
+Report every rubric item without restating issue details:
+
+| Rule | Status | Evidence or finding |
 |---|---|---|
 
-Use `Pass`, `N/A`, or `Unverified` unchanged. Format issues as `[P0] Issue`, `[P1] Issue`, `[P2] Issue`, or `[P3] Issue`. A rule may produce more than one detailed finding.
+Use only `Pass`, `Issue`, `N/A`, or `Unverified` as status values. For `Issue`, link to the consolidated finding number or numbers. For other statuses, give concise evidence. Do not repeat priorities in this table; each priority belongs to its consolidated finding.
 
-### Findings
-
-Order findings by consumer impact. Prefix every finding heading with its priority, for example `### [P1] Incompatible pagination contracts`. For each finding provide:
-
-1. **Issue** — violated rule, overlap classification, or payload inconsistency.
-2. **Endpoints** — exact methods and paths.
-3. **Evidence** — implementation or specification locations and relevant behavior.
-4. **Impact** — concrete client or maintenance cost.
-5. **Recommendation** — smallest compatible change; preserve an existing endpoint when removal would be breaking.
-
-If no issue survives verification, say so. End with a short list of deprecated endpoints excluded from the comparison, or `None`.
+End with a short list of deprecated endpoints excluded from the comparison, or `None`.

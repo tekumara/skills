@@ -59,12 +59,15 @@ The requested upstream article was fetched in full and every numbered rule was m
 - Skill delta: broadened the review and require a `Pass`, `Issue`, `N/A`, or `Unverified` result for Rules 0–12.
 - Subagent weakness found: mutation findings could escape a user-specified read-endpoint review boundary.
 - Skill delta: require an explicit boundary; supporting code may provide evidence but cannot expand the endpoints under review.
+- Human-verified positive example: a single priority-ordered finding list was clearer than separate REST issue and detailed finding sections.
+- Skill delta: consolidate rubric and non-rubric issues by root cause, include applicable REST rule numbers on each finding, and retain a coverage table that points to findings instead of repeating them.
 
 ## Validation history
 
 - Structural validation after this iteration: passed with no warnings.
 - Subagent replay against the five execution collection endpoints: passed; every overlap group was compared using the required four columns, including pagination parameter location, limits, and response envelope.
 - Functional-scope replay: passed; auth was excluded from functional scope and the optional `Auth` column was correctly omitted because all compared routes used the same policy.
+- Consolidated-output replay: passed against three overlapping execution-query endpoints; every issue appeared once in a priority-tagged list, applicable REST rules were attached to findings, and the coverage table referenced finding numbers without repeating issue descriptions.
 
 ## Gaps
 

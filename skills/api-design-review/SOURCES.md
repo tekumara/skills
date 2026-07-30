@@ -21,6 +21,7 @@
 - **Adopted:** all upstream Rules 0–12 as an every-run internal review rubric, transformed from narrative into checks.
 - **Adopted:** findings cite every applicable rule by number and exact rubric name; the final output omits a separate rule coverage table.
 - **Adapted:** 8. Distinguishable not-found retains the warning about ambiguous `404` responses but must be presented as opinionated when established HTTP or project conventions differ.
+- **Adapted:** OpenAPI omissions and documentation inaccuracies are `[P3]` because spec drift rarely blocks clients when runtime behavior is correct.
 - **Deferred:** performance and implementation-quality review unrelated to the API contract.
 
 ## Source adaptation
@@ -63,6 +64,7 @@ The requested upstream article was fetched in full and every numbered rule was m
 - Human-verified positive example: a single priority-ordered finding list was clearer than separate REST issue and detailed finding sections.
 - Skill delta: consolidate rubric and non-rubric issues by root cause and include applicable REST rule numbers and exact names on each finding.
 - Human-verified correction: omit the final REST rule coverage table; keep full rubric evaluation as working evidence only.
+- Human-verified correction: downgrade OpenAPI omissions and documentation inaccuracies from `[P2]` to `[P3]`.
 
 ## Validation history
 

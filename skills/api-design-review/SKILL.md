@@ -60,10 +60,10 @@ Review the implemented API contract, not route names alone.
 |---|---|---|
 | `[P0]` | Drop everything to fix; blocking release or operations. | Use only for a verified release or operational blocker. |
 | `[P1]` | Urgent; address in the next cycle. | Use for changes to endpoint scope or success responses, authorization issues, and issues against rule 0. Be pragmatic or rule 2. Minimal paths. |
-| `[P2]` | Normal; fix eventually. | Use for OpenAPI omissions or documentation inaccuracies, idempotency problems, distinguishable not-found issues, and structured-error issues. |
-| `[P3]` | Low; nice to have. | Use for remaining verified issues with limited consumer or operational impact. |
+| `[P2]` | Normal; fix eventually. | Use for idempotency problems, distinguishable not-found issues, and structured-error issues. |
+| `[P3]` | Low; nice to have. | Use for OpenAPI omissions or documentation inaccuracies and remaining verified issues with limited consumer or operational impact. |
 
-When categories overlap, assign the highest priority that reflects the verified impact. An OpenAPI omission about authorization remains `[P2]` when runtime authorization is correct; use `[P1]` when the implemented authorization or endpoint access boundary is wrong. Never assign `[P0]` without evidence of release or operational blockage.
+When categories overlap, assign the highest priority that reflects the verified impact. An OpenAPI omission about authorization remains `[P3]` when runtime authorization is correct; use `[P1]` when the implemented authorization or endpoint access boundary is wrong. Never assign `[P0]` without evidence of release or operational blockage.
 
 ## Review Rules
 

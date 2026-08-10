@@ -7,6 +7,5 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 # install symlinks
-stow -vv skills -t ~/.codex/skills
-stow -vv skills -t ~/.pi/agent/skills
+stow -vv skills -t ~/.agents/skills
 stow -vv prompts -t ~/.pi/agent/prompts

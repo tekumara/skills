@@ -18,7 +18,8 @@ Read `better-github-skill` before GitHub operations. Keep work on the existing P
 
 ## Safety rules
 
-- A pending review is a draft. Do **not** submit it unless the user explicitly asks.
+- A pending review is a draft. Do **not** submit it unless the user explicitly asks. It is also not visible to other PR participants or bots until submitted.
+- If the user asks to tag, notify, or request work from a bot or another participant in a draft review, explain that the draft cannot notify them and ask whether to submit the review or keep it private. Never work around this by posting a separate public PR comment unless the user explicitly requests that separate comment.
 - Use the GitHub PR head and diff to establish an inline anchor. Do not anchor from an unpushed local change.
 - Inspect the pending review's existing comments before adding one. Do not duplicate a comment already present.
 - Do not post or submit a comment until its destination, PR, draft-review state, file, and changed-side line are verified.

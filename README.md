@@ -7,6 +7,7 @@ My agent skills and prompts.
 | Skill | Description |
 | --- | --- |
 | [add-release-please](skills/add-release-please/SKILL.md) | Add release-please automation to a repository that uses GitHub Actions for releases or package publishing. |
+| [github-pr-comments](skills/github-pr-comments/SKILL.md) | Add and verify GitHub PR comments, including inline comments in pending reviews. |
 | [govuk-style](skills/govuk-style/SKILL.md) | Write and edit in GOV.UK / GDS house style for clear, accessible prose. |
 | [jj-commit](skills/jj-commit/SKILL.md) | Commit Jujutsu working-copy changes, push existing bookmarks, or commit and push only when explicitly requested. |
 | [jj-workspace-management](skills/jj-workspace-management/SKILL.md) | Manage Jujutsu workspaces for isolated task execution, rebases, conflict resolution, and cleanup. |

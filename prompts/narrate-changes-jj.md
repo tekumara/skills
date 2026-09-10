@@ -1,5 +1,5 @@
 ---
-description: Rechunk into a narrative-quality change history
+description: Rechunk into a narrative-quality change history using jujustsu
 argument-hint: "[branch]"
 ---
 Plan how to implement the changes in branch $ARGUMENTS as a new set of changes with a clean, narrative-quality change history suitable for reviewer comprehension.

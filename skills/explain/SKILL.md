@@ -1,6 +1,7 @@
 ---
 name: explain
 description: Guided tour of changes or codebase - explains how things work conceptually rather than listing changes mechanically. Use anytime you're asked to explain, review, walk through, or summarize work, branch changes, or codebase architecture.
+disable-model-invocation: true
 ---
 
 # Explain: Conceptual Clarity Over Mechanical Completeness

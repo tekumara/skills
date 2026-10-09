@@ -4,7 +4,7 @@
 
 | Source | Trust | Contribution | Constraints |
 |---|---|---|---|
-| [`skills/explain/SKILL.md` at `b771ea1`](https://github.com/hugobowne/show-us-your-agent-skills/blob/b771ea1b33d75fa19f4b02dbe10b0f1bf2fb49ef/skills/explain/SKILL.md) | Primary, author-supplied | Entire `SKILL.md`, copied verbatim | MIT; keep the copyright notice and license link below |
+| [`skills/explain/SKILL.md` at `b771ea1`](https://github.com/hugobowne/show-us-your-agent-skills/blob/b771ea1b33d75fa19f4b02dbe10b0f1bf2fb49ef/skills/explain/SKILL.md) | Primary, author-supplied | Entire `SKILL.md`, copied verbatim except one frontmatter field | MIT; keep the copyright notice and license link below |
 
 ## Provenance
 
@@ -14,9 +14,9 @@
 - **Original author:** Jeremiah Lowin, credited as the commit author and in the upstream skill README.
 - **Blob SHA:** `bc87bf7bf73484c60655008669bd0f50f00611de`
 - **Retrieved:** 2026-10-09
-- **Local changes:** none
+- **Local changes:** adds `disable-model-invocation: true` to the frontmatter, so the skill runs only when invoked explicitly as `/skill:explain`.
 
-To verify the copy, run `git hash-object skills/explain/SKILL.md`. It should print the blob SHA above.
+To verify the copy, run `sed '/^disable-model-invocation: true$/d' skills/explain/SKILL.md | git hash-object --stdin`. It should print the blob SHA above.
 
 ## Version choice
 

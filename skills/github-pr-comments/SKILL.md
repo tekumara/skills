@@ -24,6 +24,7 @@ Read `better-github-skill` before GitHub operations. Keep work on the existing P
 - Inspect the pending review's existing comments before adding one. Do not duplicate a comment already present.
 - Do not post or submit a comment until its destination, PR, draft-review state, file, and changed-side line are verified.
 - Use `--body-file` or a quoted heredoc for ordinary GitHub comment bodies. Never interpolate untrusted text into shell source.
+- When listing commit SHAs in a PR comment, leave them unformatted (no inline-code backticks) so GitHub auto-links each commit.
 
 ## Adding an inline comment to an existing pending review
 

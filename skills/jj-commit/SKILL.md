@@ -1,6 +1,6 @@
 ---
 name: jj-commit
-description: Commit Jujutsu working-copy changes, push an existing Jujutsu bookmark, or commit and push when explicitly requested. Use when the user asks to "jj commit", "commit with jj", "jj push", "push with jj", "jj commit and push", or wants a fast Jujutsu commit/push workflow.
+description: Use only when the user explicitly asks to use Jujutsu (jj), such as "jj commit", "commit with jj", or "jj push". Do not use for unqualified commit/push requests or Git operations.
 ---
 
 # JJ Commit
@@ -9,11 +9,13 @@ Use this skill for commit-only, push-only, and commit+push flows.
 
 ## Decision rule
 
-- If the user asks to **commit**, do a commit only.
-- If the user asks to **push** or says **jj push**, push an existing committed change/bookmark only; do not create a commit unless they also ask to commit.
-- If the user explicitly asks to **commit and push**, use the commit+push flow.
-- Never infer push from words like "commit", "jj commit", or "save this".
-- Never infer commit from words like "push" or "jj push"; if there are uncommitted working-copy changes, stop and ask whether to commit them first.
+- Use these flows only when the user explicitly asks to use Jujutsu, for example: `jj commit`, `jj push`, or `commit with jj`.
+- If the user asks only to **commit** or **push**, or asks to use Git, do not use this skill; follow the repository's normal version-control workflow.
+- If the user asks to commit with jj, do a commit only.
+- If the user asks to push with jj, push an existing committed change/bookmark only; do not create a commit unless they also ask to commit with jj.
+- If the user explicitly asks to commit and push with jj, use the commit+push flow.
+- Never infer push from `jj commit` or "save this".
+- Never infer commit from `jj push`; if there are uncommitted working-copy changes, stop and ask whether to commit them first.
 
 ## Fast path
 

@@ -19,8 +19,11 @@ GOOD
 > ✅ perf(server): cut websocket frame size by 70%+ with gzipping
 
 Open the description with a simple explanation of the problem based on the
-user's original prompt, then briefly explain the solution. Do not lead with an
-implementation inventory:
+user's original prompt, then briefly explain the solution.
+
+If the change fixes a bug, include full error messages and relevant logs.
+
+Do not lead with an implementation inventory:
 
 BAD
 

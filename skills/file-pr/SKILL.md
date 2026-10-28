@@ -1,9 +1,9 @@
 ---
-name: create-pr
+name: file-pr
 description: Raise a concise pull request. Use when the user asks to raise, open, or create a PR.
 ---
 
-# Create PR
+# File PR
 
 
 PR titles usually become commit messages, so follow the repository's title

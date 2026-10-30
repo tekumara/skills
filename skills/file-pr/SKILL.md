@@ -37,3 +37,20 @@ End the description with the public model name and harness that made the
 changes, for example `Created with <model> in <harness>.` Include subagent
 models that wrote part of the change. Use the model name the harness reports.
 If model identity is unavailable, name the harness without guessing a model.
+
+## Enable auto-merge
+
+After opening the PR, enable GitHub auto-merge unless the user explicitly asks
+otherwise. Asking to raise a PR authorises this without separate confirmation,
+including an immediate merge if all required checks and approvals already pass.
+
+Use the repository's merge convention, defaulting to squash:
+
+```bash
+gh pr merge "$PR_URL" --auto --squash
+```
+
+Verify that auto-merge is enabled, or that the PR has already merged. If it
+cannot be enabled, report the blocker rather than silently skipping it. Keep
+required checks and approvals in force: do not use `--admin`, bypass branch
+protection, or mark a draft ready merely to enable auto-merge.

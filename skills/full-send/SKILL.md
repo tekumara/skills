@@ -1,6 +1,6 @@
 ---
 name: full-send
-description: Trigger this if the user says 'full send'.
+description: Trigger this if the user says 'full send' or 'send it' or 'sendit'.
 ---
 
 # Full Send

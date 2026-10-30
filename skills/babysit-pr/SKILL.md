@@ -1,12 +1,34 @@
 ---
 name: babysit-pr
-description: Monitor a pull request through review and CI. Use when the user asks to monitor, watch, or babysit a PR.
+description: Monitor a pull request through review and CI, enabling GitHub auto-merge by default. Use when the user asks to monitor, watch, or babysit a PR.
 ---
 
 # Babysit PR
 
 Many repos have AI review bots. They're helpful, even if they are not always
 right.
+
+## Enable auto-merge
+
+Enable GitHub auto-merge when you start babysitting, unless the user explicitly
+asks otherwise. Asking to monitor, watch, or babysit a PR authorises this without
+separate confirmation, including an immediate merge if required checks and
+approvals already pass.
+
+Use the repository's merge convention, defaulting to squash:
+
+```bash
+gh pr merge "$PR_URL" --auto --squash
+```
+
+Verify that auto-merge is enabled, the PR is in the merge queue, or it has already
+merged. If auto-merge cannot be enabled, report why and continue babysitting.
+Do not stop or wait for user input solely because enabling auto-merge failed.
+Keep required checks and approvals in force: do not use `--admin`, bypass branch
+protection, or mark a draft ready merely to enable auto-merge.
+
+Enabling auto-merge does not replace babysitting. Continue handling reviews and
+CI until the PR is ready or merged.
 
 ## Waiting
 
@@ -110,8 +132,11 @@ user, and ask before closing the PR unless closure was explicitly authorized.
 
 If nothing has changed, stay quiet rather than posting filler comments. Stop
 when `pr-wait` exits 0, or in T3 Code when the merge gate passes on the latest
-head. Merge only when the user explicitly requested it;
-otherwise report that the PR is ready. Right before a merge, run `git fetch` and
-check the PR again. Never merge when it is BEHIND or DIRTY, or when base commits
-that landed after the last green run touch this PR's files. Rebase, push, and
-wait for green again.
+head. Report whether the PR has merged, is queued, has auto-merge enabled, or is
+ready without auto-merge. Include any reason auto-merge could not be enabled.
+
+Right before a manual merge, run `git fetch` and check the PR again. Never
+manually merge when it is BEHIND or DIRTY, or when base commits that landed after
+the last green run touch this PR's files. Rebase, push, and wait for green again.
+These checks do not block enabling auto-merge or require disabling it; GitHub
+enforces the repository's configured merge requirements.
